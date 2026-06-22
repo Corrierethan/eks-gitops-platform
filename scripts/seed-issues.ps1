@@ -484,14 +484,27 @@ Polish for handoff.
 
 # ---------------------------------------------------------------------
 # Create issues
+#   Note: andyvn1 must ACCEPT the collaborator invite before issues can
+#   be assigned. Issues are created regardless; assignment is attempted
+#   but tolerated if it fails (re-run the assign step below afterwards).
 # ---------------------------------------------------------------------
 $created = 0
+$unassigned = @()
 foreach ($i in $issues) {
     $tmp = New-TemporaryFile
     Set-Content -Path $tmp.FullName -Value $i.body -Encoding utf8
-    gh issue create --repo $Repo --title $i.title --body-file $tmp.FullName --assignee $Assignee --label $i.labels
+    $url = gh issue create --repo $Repo --title $i.title --body-file $tmp.FullName --label $i.labels
     Remove-Item $tmp.FullName -Force
+    Write-Host "Created: $url"
+    # try to assign; don't abort the run if the invite is still pending
+    $null = gh issue edit $url --add-assignee $Assignee 2>$null
+    if ($LASTEXITCODE -ne 0) { $unassigned += $url }
     $created++
 }
 
 Write-Host "Done. Created $created issues in $Repo." -ForegroundColor Green
+if ($unassigned.Count -gt 0) {
+    Write-Host "`n$($unassigned.Count) issue(s) could not be assigned to $Assignee (invite likely still pending)." -ForegroundColor Yellow
+    Write-Host "After $Assignee accepts the collaborator invite, run:" -ForegroundColor Yellow
+    Write-Host "  gh issue list --repo $Repo --json number -q '.[].number' | % { gh issue edit `$_ --repo $Repo --add-assignee $Assignee }" -ForegroundColor Yellow
+}
