@@ -1,0 +1,32 @@
+# ----- Terraform -----
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Keep the lock file — it pins provider versions for reproducible builds
+# !.terraform.lock.hcl   (uncomment once terraform init has been run)
+
+# ----- OS noise -----
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+
+# ----- IDE -----
+.vscode/
+.idea/
+*.iml
+
+# ----- Environment -----
+.env
+.env.*
