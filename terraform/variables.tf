@@ -21,6 +21,11 @@ variable "cluster_name" {
   default     = "eks-gitops"
 }
 
+variable "vpc_id" {
+  description = "ID of the existing VPC where the EKS cluster will be deployed."
+  type        = string
+}
+
 variable "tags" {
   description = "Default tags applied to all AWS resources."
   type        = map(string)
