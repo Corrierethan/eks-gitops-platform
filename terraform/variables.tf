@@ -26,6 +26,18 @@ variable "vpc_id" {
   type        = string
 }
 
+variable "kubernetes_version" {
+  description = "Kubernetes version for the EKS cluster."
+  type        = string
+  default     = "1.31"
+}
+
+variable "endpoint_public_access" {
+  description = "Whether the EKS API server is reachable from the public internet. Set to false for hardened deployments."
+  type        = bool
+  default     = false
+}
+
 variable "tags" {
   description = "Default tags applied to all AWS resources."
   type        = map(string)
