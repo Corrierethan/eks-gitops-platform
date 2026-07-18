@@ -38,6 +38,36 @@ variable "endpoint_public_access" {
   default     = false
 }
 
+variable "node_instance_types" {
+  description = "EC2 instance types for the worker nodes."
+  type        = list(string)
+  default     = ["m5.large"]
+}
+
+variable "node_desired_size" {
+  description = "Desired number of worker nodes."
+  type        = number
+  default     = 2
+}
+
+variable "node_min_size" {
+  description = "Minimum number of worker nodes."
+  type        = number
+  default     = 1
+}
+
+variable "node_max_size" {
+  description = "Maximum number of worker nodes."
+  type        = number
+  default     = 4
+}
+
+variable "node_disk_size" {
+  description = "EBS root volume size in GB for worker nodes."
+  type        = number
+  default     = 50
+}
+
 variable "tags" {
   description = "Default tags applied to all AWS resources."
   type        = map(string)
