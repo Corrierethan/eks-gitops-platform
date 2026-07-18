@@ -38,6 +38,24 @@ variable "endpoint_public_access" {
   default     = false
 }
 
+variable "addon_vpc_cni_version" {
+  description = "Version of the vpc-cni EKS add-on."
+  type        = string
+  default     = "v1.19.0-eksbuild.1"
+}
+
+variable "addon_coredns_version" {
+  description = "Version of the coredns EKS add-on."
+  type        = string
+  default     = "v1.11.4-eksbuild.1"
+}
+
+variable "addon_kube_proxy_version" {
+  description = "Version of the kube-proxy EKS add-on."
+  type        = string
+  default     = "v1.31.3-eksbuild.2"
+}
+
 variable "node_instance_types" {
   description = "EC2 instance types for the worker nodes."
   type        = list(string)
