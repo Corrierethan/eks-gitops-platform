@@ -1,0 +1,55 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-rbac-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-rbac-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  policy.default: role:readonly
+  policy.csv: |
+    p, role:platform-admin, applications, *, */*, allow
+    p, role:platform-admin, clusters, *, *, allow
+    p, role:platform-admin, repositories, *, *, allow
+    p, role:platform-admin, projects, *, *, allow
+    p, role:platform-admin, logs, get, */*, allow
+    p, role:platform-admin, exec, create, */*, deny
+  scopes: '[groups]'
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  admin.enabled: "true"
+  exec.enabled: "false"
+  timeout.reconciliation: 180s
+  statusbadge.enabled: "false"
+  users.anonymous.enabled: "false"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: argocd-server
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-server
+    app.kubernetes.io/part-of: argocd
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: argocd-server
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8080
+    - name: https
+      protocol: TCP
+      port: 443
+      targetPort: 8080

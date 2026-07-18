@@ -9,3 +9,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 - Repository skeleton: folder structure, `.gitignore`, `.editorconfig`, `.tflint.hcl`, LICENSE.
+- Argo CD bootstrap manifests with pinned upstream install, ClusterIP-only server access,
+  default read-only RBAC, and a deployment stub for issue #9.
