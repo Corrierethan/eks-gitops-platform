@@ -23,3 +23,13 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+# Sync wave ordering convention for child apps in gitops/apps/:
+#   wave -1 : CRDs (cert-manager, external-secrets)
+#   wave  0 : Core add-ons (ingress-nginx, metrics-server)
+#   wave  1 : Platform services that depend on CRDs
+#   wave  2 : Workloads and policies
+#
+# Usage in child app:
+#   metadata:
+#     annotations:
+#       argocd.argoproj.io/sync-wave: "-1"
