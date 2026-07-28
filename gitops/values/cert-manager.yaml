@@ -1,0 +1,18 @@
+installCRDs: true
+replicaCount: 2
+
+global:
+  leaderElection:
+    namespace: cert-manager
+
+securityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
