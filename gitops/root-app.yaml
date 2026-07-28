@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root-app
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: platform
+
+  source:
+    repoURL: https://github.com/Corrierethan/eks-gitops-platform.git
+    targetRevision: main
+    path: gitops/apps
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+# Sync wave ordering convention for child apps in gitops/apps/:
+#   wave -1 : CRDs (cert-manager, external-secrets)
+#   wave  0 : Core add-ons (ingress-nginx, metrics-server)
+#   wave  1 : Platform services that depend on CRDs
+#   wave  2 : Workloads and policies
+#
+# Usage in child app:
+#   metadata:
+#     annotations:
+#       argocd.argoproj.io/sync-wave: "-1"
