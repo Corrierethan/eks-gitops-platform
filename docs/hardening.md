@@ -1,6 +1,6 @@
 # Hardening
 
-This is a stub for issue #12. The full hardening guide (CIS Benchmark, NSA/CISA, kube-bench) lands in issue #15.
+This is a stub for issues #12 and #13. The full hardening guide (CIS Benchmark, NSA/CISA, kube-bench) lands in issue #15.
 
 ## Network policy: default-deny + explicit allow
 
@@ -18,6 +18,20 @@ Delivered via GitOps through `gitops/apps/network-policies.yaml` (Argo CD Applic
 
 To add a new allowed flow for a workload, add a new `NetworkPolicy` file scoped with a specific `podSelector` (not `{}`) rather than editing `default-deny.yaml`.
 
+## Pod Security Standards: restricted
+
+Kubernetes' built-in Pod Security Admission (PSA) rejects non-compliant pods at the API server, before they're ever scheduled. It's driven entirely by labels on the `Namespace` object — no separate controller to install.
+
+- `pod-security.kubernetes.io/enforce` — blocks non-compliant pods outright.
+- `pod-security.kubernetes.io/audit` — logs a violation to the audit log without blocking.
+- `pod-security.kubernetes.io/warn` — returns a warning to the client (`kubectl`/Argo CD) without blocking.
+
+`sample-app` (`policies/pod-security/namespace-labels.yaml`) runs all three at `restricted`, the strictest built-in profile: non-root, no privilege escalation, all capabilities dropped, a seccomp profile required. The Deployment in `gitops/workloads/sample-app/deployment.yaml` was already written to satisfy this in #11, so nothing else needed to change to pass it.
+
+Delivered via GitOps through `gitops/apps/pod-security.yaml`, synced one wave *before* `sample-app` itself so the namespace is already restricted by the time the workload's pods are admitted.
+
+**`kube-system` is intentionally exempted** and left without an `enforce: restricted` label. It runs cluster-critical components (CoreDNS, kube-proxy, the AWS VPC CNI's `aws-node` daemonset) that require host networking, host PID, or elevated capabilities to function — `restricted` would reject them and break the cluster. This is an accepted, documented exception rather than an oversight; only genuine application workload namespaces are held to `restricted`.
+
 ## Verifying enforcement
 
 ```bash
@@ -28,11 +42,16 @@ kubectl -n sample-app run dns-test --rm -it --image=busybox:1.36 --restart=Never
 # A pod without the ingress-nginx origin should NOT reach sample-app
 kubectl -n sample-app run curl-test --rm -it --image=curlimages/curl:8.10.1 --restart=Never \
   -- curl -m 3 http://sample-app.sample-app.svc.cluster.local
+
+# A privileged pod should be rejected by Pod Security Admission
+kubectl -n sample-app run privileged-test --image=busybox:1.36 --restart=Never \
+  --overrides='{"spec":{"containers":[{"name":"privileged-test","image":"busybox:1.36","securityContext":{"privileged":true}}]}}'
 ```
 
-The DNS lookup should succeed; the curl should time out.
+The DNS lookup should succeed; the curl should time out; the privileged pod should be rejected with a Pod Security Admission error.
 
 ## NIST mapping
 
 - **SC-7**: Boundary protection — namespace-scoped default-deny enforces a defined network boundary per workload.
 - **AC-4**: Information flow enforcement — only explicitly allowed flows (DNS, ingress-nginx → sample-app) cross that boundary.
+- **CM-7**: Least functionality — Pod Security Admission at `restricted` blocks pods that request unnecessary privileges, host access, or root execution.
